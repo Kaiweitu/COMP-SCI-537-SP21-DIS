@@ -14,7 +14,7 @@
     
 
 static void exit_with_error() {
-    printf("my-look: invalid command line\n");
+    printf("my-head: invalid command line\n");
     exit(1);
 }
 
