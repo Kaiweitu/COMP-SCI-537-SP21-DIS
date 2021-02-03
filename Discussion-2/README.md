@@ -1,19 +1,16 @@
 # COMP SCI 537 DIS-313 Week 2
-What we will cover
-- xv6 introduction
-    - Makefile
-    - User-level program
-    - Kernel-level code path for a syscall
+What we will cover:
+- Makefile
 - Compiling and debugging xv6
+- xv6 code walk-through
 - P2 spec overview;
 
 References:
 - GNU manual page for the Makefile: https://www.gnu.org/software/make/manual/make.html#Introduction
 - xv6 reference book: https://pdos.csail.mit.edu/6.828/2014/xv6/book-rev8.pdf
 
-## xv6 Introduction
 xv6 is simple x86-based operating system developed in MIT for teaching purpose. We will use a emulator named QEMU to run our xv6 operating system.
-### Basic makefile
+## Basic Makefile
 Make is a build automation tool that build executable program by reading a file named Makefile. Makefile consists of a set of rules. A rule is defined as following
 ~~~[bash]
 target: prerequisites
@@ -34,7 +31,7 @@ Note that there will be exactly one tab before the command. In addition, a targe
 clean:
     rm -rf *.o 
 ~~~
-### Compilation and debugging
+## Compilation and Debugging w/ GDB
 As we mentioned above, we use QEMU to run xv6. The makefile provided by the xv6 handles anything we need to run source in QEMU. If we wants to compile and run the xv6, we execute
 ~~~[bash]
 make qemu-nox
@@ -54,5 +51,31 @@ make qemu-nox-gdb
 ~~~
 gdb
 ~~~
-### Xv6 source code
+## xv6 Code Walk-through
+### Interrupt Descriptor Table
+Syscall is a protected transfer of control from an application (`user mode`) to the OS (`kernel mode`). This transfer is implemented through a hardware instruction **int** named interrupt. When interrupt happens, the hardware will raise the privilege level to the `kernel mode` and execute the corresponding kernel code through a table named Interrupt descriptor table (IDT). This table is pre-set by the OS when booting up. 
+~~~[c]
+# main.c
+void
+main(void) 
+{
+    ...
+    tvinit(); // Interrupt table is setup here
+    ...
+    mpmain(); // Tell the hardware where to find the IDT
+}
+~~~
 
+### Syscall
+What's happening when a user program call a syscall such as kill(1)? The following files are where you might want to check out.
+~~~[bash]
+# User-level
+| - user.h // user-level header file for all syscalls 
+| - usys.S // assembly code where syscall is linked to a trap instruction. 
+
+# Kernel-level
+| - trap.c // trap handler
+| - syscall.c // syscall()
+| - sysproc.c // This file contains function which links between syscall and actual kill function.
+| - proc.c // This file contains where the actual kill function.
+~~~
