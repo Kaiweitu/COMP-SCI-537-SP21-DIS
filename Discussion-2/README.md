@@ -1,4 +1,4 @@
-: COMP SCI 537 DIS-313 Week 2
+# COMP SCI 537 DIS-313 Week 2
 What we will cover
 - xv6 introduction
     - Makefile
