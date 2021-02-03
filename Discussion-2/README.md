@@ -77,5 +77,7 @@ What's happening when a user program call a syscall such as kill(1)? The followi
 | - trap.c // trap handler
 | - syscall.c // syscall()
 | - sysproc.c // This file contains function which links between syscall and actual kill function.
+| - syscall.h // Define the number of the syscall
 | - proc.c // This file contains where the actual kill function.
 ~~~
+Note that there might be other files you need to change in your project. 
