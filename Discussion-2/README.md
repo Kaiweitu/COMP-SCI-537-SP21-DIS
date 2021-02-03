@@ -1,9 +1,12 @@
 # COMP SCI 537 DIS-313 Week 2
 What we will cover:
-- Makefile
-- Compiling and debugging xv6
-- xv6 code walk-through
-- P2 spec overview;
+- Basic Makefile
+- Compiling and Debugging xv6
+- xv6 Code Walk-through
+    - User-level Application
+    - Interrupt descriptor table
+    - Syscall
+- P2 Spec Overview;
 
 References:
 - GNU manual page for the Makefile: https://www.gnu.org/software/make/manual/make.html#Introduction
@@ -52,6 +55,11 @@ make qemu-nox-gdb
 gdb
 ~~~
 ## xv6 Code Walk-through
+### User-level Application
+We can write our own application inside the xv6. This could be done in two steps:
+1. Write your own program using the syscall defined in the xv6 (see `user.h`)
+2. Add your program to the Makefile to let it compile and load into xv6 
+
 ### Interrupt Descriptor Table
 Syscall is a protected transfer of control from an application (`user mode`) to the OS (`kernel mode`). This transfer is implemented through a hardware instruction **int** named interrupt. When interrupt happens, the hardware will raise the privilege level to the `kernel mode` and execute the corresponding kernel code through a table named Interrupt descriptor table (IDT). This table is pre-set by the OS when booting up. 
 ~~~[c]
