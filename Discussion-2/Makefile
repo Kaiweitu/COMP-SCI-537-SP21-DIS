@@ -6,9 +6,13 @@ all: my-head
 # $< refers to first dependency file
 # $@ refers to the target name
 my-head: my-head.o
-
+	$(CC) $(CFLAGS) $< -o $@
 
 my-head.o: my-head.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
+
+.PHONY: clean
 clean:
+	rm -f *.o my-head
 
