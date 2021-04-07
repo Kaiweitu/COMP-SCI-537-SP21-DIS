@@ -22,7 +22,11 @@ The general idea could be summaried as folllowing:
 3. This page will only be encrypted again until it is evicted from the queue.
 
 ### Clock Algorithm 
-The clock algorithm is also named FIFO second-chance algorithm. So simply speaking, it's an FIFO-based algorithm that is used to approximate LRU in practice. In order to implement this algorithm, we need to have one extra reference bit maybe named PTE_R to keep track whether this page has recently been accessed. The idea is as following:
+The clock algorithm is also named FIFO second-chance algorithm. So simply speaking, it's an FIFO-based algorithm that is used to approximate LRU in practice. In order to implement this algorithm, we need to have one extra reference bit maybe named PTE_R to keep track whether this page has recently been accessed. There is also a hardware access bit you can use in xv6. 
+~~~[c]
+#define PTE_R           0x020 // This field is maintained by the hardware
+~~~
+The idea is as following:
 1. When a page is decrypted, it will be added to the tail of the queue. The reference bit is set to one at this time. 
 2. When we want to find a victim page to evict, we pop the head of the queue.
      - If the reference bit of this page is 0, then evict this page.
@@ -33,8 +37,17 @@ Check the spec for more example. Note that a page might be deallocated by the us
 
 ### Tips
 Hopefully, through P5, we have already known how to encrypt/decrypt a page and also how to manipulate the page table (read or modify pte). In addition, we also learn how to handle the page fault in trap handler. You can reuse part of the P5 code, if you want. Therefore, in P6, we will focuse on implementing the clock algorithm mechanism. A few thing you might need to modify:
-1. `struch proc` is used to maintain per-process data. We don't want to restrict you to specific implementation. The following sample code is ONLY one way of allocating the clock queue.
+1. `struch proc` is used to maintain per-process data. We don't want to restrict you to specific implementation. The following sample code is two ways of allocating the clock queue.
   ```
+  // Ring Buffer
+  struct proc {
+    ...
+    node_t clockQ[CLOCKSIZE];       // Used as a ring buffer
+    uint head;                  // Head of the queue
+  }
+
+
+  // Linked List 
   typedef struct node {
     struct node *next;
     struct node *prev;
@@ -46,6 +59,7 @@ Hopefully, through P5, we have already known how to encrypt/decrypt a page and a
     node_t clockQ[CLOCKSIZE];       // Locally allocated Clock Queue 
     node_t *head;                  // Double-linked List Queue
   }
+
   ```
 2. `growproc` in `vm.c` and `exec` in `exec.c` might be a good place to encrypt all the USER pages when they are allocated. Altough there are many ways you can achieve this, you need to be aware that some other functions (e.g. `allocuvm` or  `mappages`) will also be used to allocate kernel pages.
 3. Now we have three possible states for a page table entry. Below is a figure might help you to better understand this. You might notice that there is a state we have all the bits as 0. This saying that we couldn't distinguish it between an invalid page without looking into other information. There are many ways to solve this problem. Adding an extra PTE_V is one of the option. 
