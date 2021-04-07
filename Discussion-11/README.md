@@ -1,4 +1,4 @@
-# COMP SCI 537 DIS-313 Week 10
+# COMP SCI 537 DIS-313 Week 11
 Contents:
 - P6 Spec Overview
   - Clock Algorithm
