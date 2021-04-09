@@ -14,7 +14,7 @@ Updates:
 2. We encourages to use the hardware access bit instead of mannually maintaining it. Update the corresponing part:
    1. Removing the description of PTE_V
    2. Update the state diagram when ref bit is zero. With hardware-maintained bit, we don't need to clear the present bit at this time.
-3. Add more detailed descrition about linked list copy.
+3. Add more detailed description about linked list copy.
 4. Several minor type fixed.
 
 ## P6 Spec Overview
