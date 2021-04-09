@@ -81,7 +81,7 @@ Hopefully, through P5, we have already known how to encrypt/decrypt a page and a
 3. Now we have three possible states for a page table entry. Below is a figure might help you to better understand this. <del>You might notice that there is a state we have all the bits as 0. This saying that we couldn't distinguish it between an invalid page without looking into other information. There are many ways to solve this problem. Adding an extra PTE_V is one of the option. </del> Figure is updated: Present bit is 1 and ref is 0 when we are using the hardware-maintained bit.
       
       ![State Diagram](state_diagram.jpeg)
-4. **Added**: If you are maintaining linked list as you clock queue, don't simply copy the pointer (shallow copy) when you copy the clock queue from the parent process. Copy the pointer will make your memory look as following at the end.
+4. **Update**: If you are maintaining linked list as you clock queue, don't simply copy the pointer (shallow copy) when you copy the clock queue from the parent process. Copy the pointer will make your memory look as following at the end.
       ![Copy Figure](copy.jpeg)
 You should do a deep copy instead which means that you should make your pointer points to the corresponding position in child process's clock queue. For instance, as shown in the figure, if the node at index 2 points to node at index 1 as its previous node. Then correspondingly, in your child process clock queue, you should let the node at index 2 point to the node at index 1 at child's clock queue.
 5. Be sure to modify the Makefile before running the test:
