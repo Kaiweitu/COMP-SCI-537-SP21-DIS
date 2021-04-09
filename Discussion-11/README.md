@@ -10,7 +10,7 @@ References:
 - Chapter 2 and 3 of xv6 reference [book](https://pdos.csail.mit.edu/6.828/2014/xv6/book-rev8.pdf)
 
 Updates:
-1. Rephrase the clock algorithm to make it compatiable to both ring buffer and linked list implementation.
+1. Rephrase the clock algorithm to make it compatible to both ring buffer and linked list implementation.
 2. We encourages to use the hardware access bit instead of mannually maintaining it. Update the corresponing part:
    1. Removing the description of PTE_V
    2. Update the state diagram when ref bit is zero. With hardware-maintained bit, we don't need to clear the present bit at this time.
