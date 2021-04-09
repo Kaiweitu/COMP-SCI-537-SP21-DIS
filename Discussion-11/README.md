@@ -9,7 +9,13 @@ Contents:
 References:
 - Chapter 2 and 3 of xv6 reference [book](https://pdos.csail.mit.edu/6.828/2014/xv6/book-rev8.pdf)
 
-
+Updates:
+1. Rephrase the clock algorithm to make it compitable to both ring buffer and linked list implementation.
+2. We encourages to use the hardware access bit instead of mannually maintaining it. Update the corresponing part:
+   1. Removing the description of PTE_V
+   2. Update the state diagram when ref bit is zero. With hardware-maintained bit, we don't need to clear the present bit at this time.
+3. Add more detailed descrition about linked list copy.
+4. Several minor type fixed.
 
 ## P6 Spec Overview
 Remembering in P5, the user takes the responsibility to encrypt those pages. This time in P6, we will handle over the responsibility to the kernel. The core idea is to have as much as possible pages encrypted to mimize the chance being attacked. But making all the pages encrypted will largely harm the performance. Therefore, a better idea is to only maintain a working set of pages in clear text for each process. A few important points here:
@@ -22,16 +28,21 @@ The general idea could be summaried as folllowing:
 3. This page will only be encrypted again until it is evicted from the queue.
 
 ### Clock Algorithm 
-The clock algorithm is also named FIFO second-chance algorithm. So simply speaking, it's an FIFO-based algorithm that is used to approximate LRU in practice. In order to implement this algorithm, we need to have one extra reference bit maybe named PTE_R to keep track whether this page has recently been accessed. There is also a hardware access bit you can use in xv6. 
+The clock algorithm is also named FIFO second-chance algorithm. So simply speaking, it's an FIFO-based algorithm that is used to approximate LRU in practice. 
+
+<del>In order to implement this algorithm, we need to have one extra reference bit maybe named PTE_R to keep track whether this page has recently been accessed. There is also a hardware access bit you can use in xv6. </del> 
+
+In order to implement this algorithm, we need to one extra bit to keep track whether this page has been recently accessed. Lucily, the hardware has already done this for you using an access bit (6th bit). This bit can be cleared by the kernel and reset automatically when access.
 ~~~[c]
-#define PTE_R           0x020 // This field is maintained by the hardware
+#define PTE_A           0x020 // This field is maintained by the hardware
 ~~~
 The idea is as following:
-1. When a page is decrypted, it will be added to the tail of the queue. The reference bit is set to one at this time. 
-2. When we want to find a victim page to evict, we pop the head of the queue.
+1. When a page is decrypted, it will be added to the tail of the queue. The reference bit is set to one at this time.
+2. <del>When we want to find a victim page to evict, we pop the head of the queue.</del>
+   When we want to find the a victim page to evict, we check the clock hand (head of the queue).
      - If the reference bit of this page is 0, then evict this page.
-     - Otherwise, we set its reference bit to 0 and push it to the back of the queue(that's why we call it second-chance).
-3. Repeat step 2 until we find the victim pages to evict.
+     - Otherwise, we set its reference bit to 0 and <del>push</del> move it to the back of the queue(that's why we call it second-chance).
+3. <del>Repeat step 2 until we find the victim pages to evict.</del> Repeat step 2 by moving the clock hand to the next one in the queue until we find the victim pages to evict.
 
 Check the spec for more example. Note that a page might be deallocated by the user, when it's on the queue, in this case, simply remove it from the queue.
 
@@ -42,7 +53,8 @@ Hopefully, through P5, we have already known how to encrypt/decrypt a page and a
   // Ring Buffer
   struct proc {
     ...
-    node_t clockQ[CLOCKSIZE];       // Used as a ring buffer
+    // Updated: Fix typo: Change node_t to pte_t
+    pte_t clockQ[CLOCKSIZE];       // Used as a ring buffer
     uint head;                  // Head of the queue
   }
 
@@ -61,12 +73,17 @@ Hopefully, through P5, we have already known how to encrypt/decrypt a page and a
   }
 
   ```
+  **UPDATE:** Both ways of implementation has its pros and cons:
+  1. Removing element from a ring buffer involves shifting the element around while it could be easier to implement and copy.
+  2. Implement and copy a linked list might be tricky but it will be easier to remove elements from the linked list.
+  So just go with what make you comfortable to implement and both of them should be doable.
 2. `growproc` in `vm.c` and `exec` in `exec.c` might be a good place to encrypt all the USER pages when they are allocated. Altough there are many ways you can achieve this, you need to be aware that some other functions (e.g. `allocuvm` or  `mappages`) will also be used to allocate kernel pages.
-3. Now we have three possible states for a page table entry. Below is a figure might help you to better understand this. You might notice that there is a state we have all the bits as 0. This saying that we couldn't distinguish it between an invalid page without looking into other information. There are many ways to solve this problem. Adding an extra PTE_V is one of the option. 
+3. Now we have three possible states for a page table entry. Below is a figure might help you to better understand this. <del>You might notice that there is a state we have all the bits as 0. This saying that we couldn't distinguish it between an invalid page without looking into other information. There are many ways to solve this problem. Adding an extra PTE_V is one of the option. </del> Figure is updated: Present bit is 1 and ref is 0 when we are using the hardware-maintained bit.
       
-      ![State Diagram](state-diagram.jpeg)
-4. When copying a linked list. Don't simply copy the pointer (shallow copy) when you copy the clock queue from the parent process. Copy the pointer will make your memory look as following at the end.
+      ![State Diagram](state_diagram.jpeg)
+4. **Added**: If you are maintaining linked list as you clock queue, don't simply copy the pointer (shallow copy) when you copy the clock queue from the parent process. Copy the pointer will make your memory look as following at the end.
       ![Copy Figure](copy.jpeg)
+You should do a deep copy instead which means that you should make your pointer points to the corresponding position in child process's clock queue. For instance, as shown in the figure, if the node at index 2 points to node at index 1 as its previous node. Then correspondingly, in your child process clock queue, you should let the node at index 2 point to the node at index 1 at child's clock queue.
 5. Be sure to modify the Makefile before running the test:
    1. Modify `-O2` to `-O0`. Any other flag except `-O0` will let the compiler do some amount of optimization which will make the test not work.
    2. Modify CPU to 1 
@@ -76,7 +93,7 @@ Exec is a function which do all the setup works before running a user program. A
 1. Copy the code text from the file system into the memory. The text and data for the progam is placed normally starting from virtual address 0.
 2. Allocate one stack page two pages above the text and data pages. Copy all the argument into the stack.
 
-The layout looks as following:
+<del>The layout looks as following</del> The layout might look as following if the program text and data is one-page:
 
   ![Memory Figure](memory.jpeg)
   
